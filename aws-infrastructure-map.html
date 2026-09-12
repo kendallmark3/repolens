@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Repolens Infrastructure Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1F4F8; --paper-raised:#FFFFFF;
+    --ink:#16202B; --ink-dim:#4E5F70;
+    --line:#C3CEDA; --line-soft:#DCE4EC;
+    --compute:#B4570E; --compute-soft:#F3DCC9;
+    --storage:#0E7C86; --storage-soft:#D3EBEC;
+    --network:#5B57D1; --network-soft:#E4E2FA;
+    --public:#B3261E; --public-soft:#F6D9D6;
+    --focus:#2563EB;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#0D131B; --paper-raised:#161F2A;
+      --ink:#E7ECF2; --ink-dim:#9FB0C0;
+      --line:#33455A; --line-soft:#25313F;
+      --compute:#E2833F; --compute-soft:#3A2A18;
+      --storage:#3FC4CC; --storage-soft:#11313A;
+      --network:#9B97F0; --network-soft:#241F4A;
+      --public:#F0776A; --public-soft:#3D1815;
+      --focus:#6DA1FF;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0D131B; --paper-raised:#161F2A;
+    --ink:#E7ECF2; --ink-dim:#9FB0C0;
+    --line:#33455A; --line-soft:#25313F;
+    --compute:#E2833F; --compute-soft:#3A2A18;
+    --storage:#3FC4CC; --storage-soft:#11313A;
+    --network:#9B97F0; --network-soft:#241F4A;
+    --public:#F0776A; --public-soft:#3D1815;
+    --focus:#6DA1FF;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans',system-ui,sans-serif;
+    padding-inline:24px;
+    padding-block:48px;
+  }
+  .mono{font-family:'IBM Plex Mono',ui-monospace,monospace;}
+
+  .page{max-width:900px;margin-inline:auto;display:flex;flex-direction:column;gap:40px;}
+
+  header.top{display:flex;flex-direction:column;gap:10px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--ink-dim);
+  }
+  h1{font-size:clamp(26px,4vw,34px);line-height:1.15;margin:0;font-weight:700;text-wrap:balance;}
+  .dek{font-size:16px;line-height:1.55;color:var(--ink-dim);max-width:62ch;margin:0;}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;}
+  .badge{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;
+    border:1px solid var(--line);border-radius:100px;
+    padding:4px 12px;color:var(--ink-dim);background:var(--paper-raised);
+  }
+
+  figure{margin:0;display:flex;flex-direction:column;gap:14px;}
+  figure .diagram{
+    border:1px solid var(--line-soft);border-radius:16px;
+    background:var(--paper-raised);padding:8px;
+  }
+  .diagram svg{width:100%;height:auto;display:block;}
+  figcaption{font-size:14px;color:var(--ink-dim);line-height:1.5;max-width:68ch;}
+  figcaption b{color:var(--ink);font-weight:600;}
+
+  .diagram text{font-family:'IBM Plex Sans',sans-serif;fill:var(--ink);}
+  .diagram .mono{font-family:'IBM Plex Mono',monospace;}
+  .diagram .title{font-weight:700;}
+  .diagram .small{font-size:11px;fill:var(--ink-dim);}
+  .diagram .tiny-tag{font-size:10.5px;letter-spacing:.02em;fill:var(--ink-dim);}
+
+  .cloud-boundary{fill:none;stroke:var(--line);stroke-width:1.5;stroke-dasharray:7 6;}
+  .vpc-boundary{fill:none;stroke:var(--network);stroke-width:1.5;stroke-dasharray:6 5;opacity:.85;}
+  .subnet-boundary{fill:none;stroke:var(--network);stroke-width:1.25;stroke-dasharray:3 5;opacity:.6;}
+  .sg-outline{fill:none;stroke:var(--public);stroke-width:1.25;stroke-dasharray:2 5;opacity:.8;}
+  .box-neutral{fill:var(--paper);stroke:var(--line);stroke-width:1.25;}
+  .box-storage{fill:var(--storage-soft);stroke:var(--storage);stroke-width:1.75;}
+  .box-compute{fill:var(--compute-soft);stroke:var(--compute);stroke-width:1.75;}
+  .box-github{fill:var(--paper);stroke:var(--ink-dim);stroke-width:1.25;}
+  .box-storage-muted{fill:var(--paper);stroke:var(--storage);stroke-width:1.25;stroke-dasharray:4 3;opacity:.85;}
+  .divider{stroke:var(--line);stroke-width:1;}
+  .arrow{stroke:var(--ink-dim);stroke-width:1.5;fill:none;}
+  .arrow-muted{stroke:var(--ink-dim);stroke-width:1.25;fill:none;stroke-dasharray:5 4;opacity:.8;}
+  .tag-public{fill:var(--public);font-family:'IBM Plex Mono',monospace;font-size:10.5px;}
+
+  table.inventory{
+    width:100%;border-collapse:collapse;font-size:14px;
+  }
+  table.inventory th{
+    text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--ink-dim);font-weight:600;padding:0 12px 10px 0;
+    border-bottom:1px solid var(--line);
+  }
+  table.inventory td{
+    padding:12px 12px 12px 0;border-bottom:1px solid var(--line-soft);
+    vertical-align:top;line-height:1.5;
+  }
+  table.inventory tr:last-child td{border-bottom:none;}
+  table.inventory td.role{white-space:nowrap;font-weight:600;color:var(--ink);}
+  table.inventory td.detail .mono{font-size:12.5px;color:var(--ink-dim);}
+  .wrap-table{overflow-x:auto;}
+
+  .not-used{
+    display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;
+    font-size:14px;color:var(--ink-dim);
+    border-top:1px solid var(--line);padding-top:16px;
+  }
+  .not-used b{color:var(--ink);font-weight:600;}
+  .not-used .mono{color:var(--ink-dim);}
+
+  footer.note{font-size:12.5px;color:var(--ink-dim);border-top:1px solid var(--line);padding-top:16px;}
+
+  @media (max-width:520px){
+    table.inventory td.role{white-space:normal;}
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header class="top">
+    <div class="eyebrow">Infrastructure map · repolens</div>
+    <h1>What's actually running, and where</h1>
+    <p class="dek">A live-traffic view of the AWS resources behind the Repo Scope demo — where the frontend is served from, where the API runs, and where (if anywhere) the database lives.</p>
+    <div class="badges">
+      <span class="badge">Region: us-east-2 (Ohio)</span>
+      <span class="badge">2 S3 buckets</span>
+      <span class="badge">1 EC2 instance</span>
+      <span class="badge">No CloudFront</span>
+      <span class="badge">No RDS</span>
+    </div>
+  </header>
+
+  <figure>
+    <div class="diagram">
+      <svg viewBox="0 0 1000 660" role="img" aria-label="A browser loads the static frontend from an S3 website bucket, then calls the API directly on an EC2 instance inside the default VPC's public subnet; the EC2 instance runs the Express API and an embedded SQLite file on its own EBS volume, with no CloudFront, load balancer, or managed database in the path.">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-dim)"/>
+          </marker>
+        </defs>
+
+        <!-- Browser -->
+        <rect x="380" y="20" width="240" height="56" rx="10" class="box-neutral"/>
+        <text x="500" y="53" text-anchor="middle" class="title" font-size="14">User's Browser</text>
+
+        <!-- Arrow to S3 -->
+        <polyline points="410,76 410,132 220,132 220,188" class="arrow" marker-end="url(#arrow)"/>
+        <text x="315" y="123" text-anchor="middle" class="mono small">GET / · http</text>
+
+        <!-- Arrow to EC2 -->
+        <polyline points="600,76 600,300 680,300 680,328" class="arrow" marker-end="url(#arrow)"/>
+        <text x="612" y="185" class="mono small">fetch /api/*</text>
+        <text x="612" y="200" class="mono small">:4000 · CORS *</text>
+
+        <!-- AWS Cloud boundary -->
+        <rect x="50" y="130" width="900" height="490" rx="16" class="cloud-boundary"/>
+        <text x="72" y="156" class="mono small" font-size="12">AWS · us-east-2 (Ohio)</text>
+
+        <!-- S3 frontend box -->
+        <rect x="90" y="188" width="260" height="122" rx="10" class="box-storage"/>
+        <text x="220" y="220" text-anchor="middle" class="title" font-size="14.5">Amazon S3</text>
+        <text x="220" y="240" text-anchor="middle" font-size="12.5">Static website hosting</text>
+        <text x="220" y="262" text-anchor="middle" class="mono tiny-tag">repolens-app-…9411</text>
+        <text x="220" y="278" text-anchor="middle" class="mono tiny-tag">public read · no CloudFront</text>
+        <text x="220" y="296" text-anchor="middle" class="tiny-tag">frontend only — the built React app</text>
+
+        <!-- VPC boundary -->
+        <rect x="430" y="168" width="480" height="422" rx="14" class="vpc-boundary"/>
+        <text x="452" y="194" font-size="13" class="title">Default VPC</text>
+        <text x="452" y="211" class="mono small">172.31.0.0/16</text>
+
+        <!-- Subnet boundary -->
+        <rect x="460" y="238" width="420" height="330" rx="12" class="subnet-boundary"/>
+        <text x="480" y="262" font-size="12.5" class="title">Public Subnet</text>
+        <text x="480" y="278" class="mono small">us-east-2c</text>
+
+        <!-- Security group outline -->
+        <rect x="503" y="305" width="337" height="210" rx="12" class="sg-outline"/>
+        <text x="825" y="298" text-anchor="end" class="tiny-tag">security group ↴</text>
+
+        <!-- EC2 box -->
+        <rect x="520" y="328" width="300" height="165" rx="10" class="box-compute"/>
+        <text x="670" y="358" text-anchor="middle" class="title" font-size="14.5">EC2 · t3.micro</text>
+        <text x="670" y="376" text-anchor="middle" class="mono tiny-tag">Amazon Linux 2023</text>
+        <line x1="530" y1="392" x2="810" y2="392" class="divider"/>
+        <text x="670" y="414" text-anchor="middle" font-size="12.5">Express API</text>
+        <text x="670" y="430" text-anchor="middle" class="mono tiny-tag">:4000 · systemd unit</text>
+        <line x1="530" y1="444" x2="810" y2="444" class="divider"/>
+        <text x="670" y="466" text-anchor="middle" font-size="12.5">SQLite (embedded)</text>
+        <text x="670" y="482" text-anchor="middle" class="mono tiny-tag">server/data/repo-scope.db</text>
+
+        <!-- CORS/public tag right at the SG crossing -->
+        <text x="686" y="322" class="tag-public">:4000 open · 0.0.0.0/0</text>
+
+        <!-- EBS -->
+        <line x1="670" y1="493" x2="670" y2="525" class="arrow-muted"/>
+        <text x="686" y="513" class="tiny-tag">local disk</text>
+        <rect x="560" y="525" width="220" height="46" rx="8" class="box-neutral"/>
+        <text x="670" y="553" text-anchor="middle" class="mono small">EBS · 8 GB gp3</text>
+
+      </svg>
+    </div>
+    <figcaption><b>How a visitor's browser is actually served.</b> The React build lives in a public S3 bucket (static website hosting — no CloudFront in front of it). The browser calls the API directly against the EC2 instance's public IP on port 4000, inside the account's default VPC. There's no SQL server: SQLite runs embedded inside the same Node process and writes to a file on the instance's own EBS volume — the "database" is really just a file on disk.</figcaption>
+  </figure>
+
+  <div class="wrap-table">
+    <table class="inventory">
+      <thead>
+        <tr><th>Role</th><th>What it is</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="role">Frontend</td>
+          <td class="detail">Amazon S3 static website hosting — bucket <span class="mono">repolens-app-728603839411</span>, public read policy, served at <span class="mono">repolens-app-728603839411.s3-website.us-east-2.amazonaws.com</span>. No CloudFront distribution in front of it.</td>
+        </tr>
+        <tr>
+          <td class="role">Backend / API</td>
+          <td class="detail">One EC2 instance, <span class="mono">i-017e8b09e3ae73579</span> (t3.micro, Amazon Linux 2023), public IP <span class="mono">3.14.70.194</span>. The Express API runs as systemd unit <span class="mono">repo-scope.service</span> on port <span class="mono">4000</span> — no load balancer or auto scaling in front of it.</td>
+        </tr>
+        <tr>
+          <td class="role">Database</td>
+          <td class="detail">SQLite, embedded in the same Node process — not a managed database, not RDS, not a separate server. Its file (<span class="mono">server/data/repo-scope.db</span>) lives on the instance's own disk.</td>
+        </tr>
+        <tr>
+          <td class="role">Instance storage</td>
+          <td class="detail">One EBS volume, <span class="mono">vol-03e28cceeaf4e50b6</span> — 8 GB, gp3 — attached to the EC2 instance. This is where the SQLite file actually sits.</td>
+        </tr>
+        <tr>
+          <td class="role">Network</td>
+          <td class="detail">Default VPC <span class="mono">vpc-00f99cba9cdf91d52</span> (<span class="mono">172.31.0.0/16</span>), public subnet, availability zone <span class="mono">us-east-2c</span>.</td>
+        </tr>
+        <tr>
+          <td class="role">Security group</td>
+          <td class="detail"><span class="mono">sg-0cd4cce0b8e4d476f</span> — <span class="mono">22/tcp</span> from <span class="mono">47.186.114.245/32</span> only (operator SSH, setup/maintenance — not app traffic) · <span class="mono">4000/tcp</span> from <span class="mono">0.0.0.0/0</span> (the public API).</td>
+        </tr>
+        <tr>
+          <td class="role">Code backup</td>
+          <td class="detail">A <i>separate, private</i> S3 bucket — <span class="mono">learnteachmaster/repolens/</span> — mirrors the source for safekeeping. It's not a website, not public, and no traffic is ever served from it.</td>
+        </tr>
+        <tr>
+          <td class="role">Source of truth</td>
+          <td class="detail">GitHub — <span class="mono">kendallmark3/repolens</span>. The EC2 instance was provisioned by cloning this once; it isn't continuously redeployed from it.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <figure>
+    <div class="diagram">
+      <svg viewBox="0 0 1000 260" role="img" aria-label="Code is pushed from the local machine to GitHub, which was cloned once onto the EC2 instance during setup, and is separately mirrored by hand into a private S3 backup bucket — neither path is part of what a visitor's browser talks to.">
+        <defs>
+          <marker id="arrow2" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-dim)"/>
+          </marker>
+        </defs>
+
+        <rect x="30" y="95" width="190" height="60" rx="10" class="box-neutral"/>
+        <text x="125" y="121" text-anchor="middle" font-size="13">Local machine</text>
+        <text x="125" y="139" text-anchor="middle" class="mono tiny-tag">this session</text>
+
+        <polyline points="220,125 300,125" class="arrow" marker-end="url(#arrow2)"/>
+        <text x="260" y="115" text-anchor="middle" class="mono small">git push</text>
+
+        <rect x="300" y="95" width="230" height="60" rx="10" class="box-github"/>
+        <text x="415" y="121" text-anchor="middle" font-size="13">GitHub</text>
+        <text x="415" y="139" text-anchor="middle" class="mono tiny-tag">kendallmark3/repolens</text>
+
+        <polyline points="530,110 610,45 700,45" class="arrow-muted" marker-end="url(#arrow2)"/>
+        <text x="600" y="30" text-anchor="middle" class="mono small">aws s3 sync (manual, backup)</text>
+        <rect x="700" y="20" width="270" height="55" rx="10" class="box-storage-muted"/>
+        <text x="835" y="42" text-anchor="middle" font-size="13">S3 — code backup</text>
+        <text x="835" y="60" text-anchor="middle" class="mono tiny-tag">learnteachmaster/repolens/ · private</text>
+
+        <polyline points="530,140 610,205 700,205" class="arrow-muted" marker-end="url(#arrow2)"/>
+        <text x="600" y="222" text-anchor="middle" class="mono small">git clone (one-time, at setup)</text>
+        <rect x="700" y="178" width="270" height="55" rx="10" class="box-compute"/>
+        <text x="835" y="200" text-anchor="middle" font-size="13">EC2 instance</text>
+        <text x="835" y="218" text-anchor="middle" class="mono tiny-tag">same instance as above</text>
+      </svg>
+    </div>
+    <figcaption><b>Source and backup — not the live path.</b> GitHub is the source of truth; the EC2 instance was seeded from it once during setup, not on a continuous deploy loop. The <span class="mono">learnteachmaster</span> bucket is a private backup copy of the code, unrelated to the public bucket that serves the frontend.</figcaption>
+  </figure>
+
+  <div class="not-used">
+    <b>Not in use:</b>
+    <span>CloudFront</span>·<span>Application/Network Load Balancer</span>·<span>RDS or any managed database</span>·<span>Auto Scaling</span>·<span>Elastic IP</span> — a single EC2 instance serves the API directly on its auto-assigned public address.
+  </div>
+
+  <footer class="note">Reflects the resources created in this session, us-east-2, as of the last deploy. Instance and bucket names are safe to share — no credentials or secrets appear in this map.</footer>
+
+</div>
+</body>
+</html>
