@@ -175,7 +175,24 @@ export const api = {
         target_slug: string;
         target_lifecycle: string;
       }[];
-      mostDependedOn: { id: string; name: string; slug: string; dependent_count: number }[];
+      mostDependedOn: {
+        id: string;
+        name: string;
+        slug: string;
+        lifecycle_state: string;
+        activity_level: string;
+        dependent_count: number;
+        high_blast_radius: boolean;
+        at_risk: boolean;
+      }[];
+      summary: {
+        highDependencyCount: number;
+        highDependencyThreshold: number;
+        dependenciesOnArchiveCandidates: number;
+        circularCount: number;
+        lowConfidenceCount: number;
+        lowConfidenceThreshold: number;
+      };
     }>("/dependencies"),
   discoveryAdapters: () => get<AdapterDescriptor[]>("/discovery/adapters"),
   discoveryStages: () => get<string[]>("/discovery/stages"),
