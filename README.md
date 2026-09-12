@@ -5,7 +5,7 @@ This workspace holds the **Repo Scope** project — an enterprise repository dis
 ## Contents
 
 - [`repo-scope/`](repo-scope/) — the application itself (React + TypeScript client, Node/Express + SQLite server). See [`repo-scope/README.md`](repo-scope/README.md) for what it does, its architecture, and how to run it locally.
-- [`intent.md`](intent.md) — the project intent (purpose, business outcomes, constraints), mirroring [`repo-scope/intent/project-intent.md`](repo-scope/intent/project-intent.md) at the workspace root.
+- [`repo-scope/intent/intent.md`](repo-scope/intent/intent.md) — the project intent (purpose, business outcomes, constraints), mirroring [`repo-scope/intent/project-intent.md`](repo-scope/intent/project-intent.md).
 - `repo-scope (1).zip` — a zip snapshot of `repo-scope/`.
 
 ## Getting started
